@@ -1,0 +1,45 @@
+- name: Install Pipx
+  shell: |
+    if ! {{ pipx_python_path_installer }} -m pip list --format freeze | grep -q pipx=={{ pipx_version }}; then
+      {{ pipx_python_path_installer }} -m pip install --user -U pipx=={{ pipx_version }}
+      {{ pipx_python_path_installer }} -m pipx ensurepath
+
+      if ! {{ pipx_python_path_installer }} -m pip list --format freeze | grep -q pipx=={{ pipx_version }}; then
+        exit 1
+      else
+        echo status=changed
+      fi
+    fi
+
+    if ! {{ pipx_python_path_installer }} -m pip list --format freeze | grep -q pipx=={{ pipx_version }}; then
+      exit 1
+    fi
+  register: task
+  changed_when: "'status=changed' in task.stdout"
+
+# ------------------------------------------------------------------------------
+# Zsh
+
+- name: "zsh : Add init block to {{ zsh_zshrc_bottom_after_comp_init }}"
+  ansible.builtin.blockinfile:
+    path: "{{ zsh_zshrc_bottom_after_comp_init }}"
+    marker: "# {mark} :: ANSIBLE MANAGED BLOCK :: {{ role_name }}"
+    block: |
+      export PIPX_DEFAULT_PYTHON={{ pipx_default_python }}
+      eval "$(register-python-argcomplete pipx)"
+  register: task
+
+- name: "zsh : Compile zshrc_bottom_after_comp_init"
+  when: task.changed
+  ansible.builtin.command: zsh -c 'zcompile -R {{ zsh_zshrc_bottom_after_comp_init }}'
+
+# ------------------------------------------------------------------------------
+# Bash
+
+- name: "bash : Add init block to {{ bash_bashrc_middle }}"
+  ansible.builtin.blockinfile:
+    path: "{{ bash_bashrc_middle }}"
+    marker: "# {mark} :: ANSIBLE MANAGED BLOCK :: {{ role_name }}"
+    block: |
+      export PIPX_DEFAULT_PYTHON={{ pipx_default_python }}
+      eval "$(register-python-argcomplete pipx)"
