@@ -17,8 +17,10 @@
   register: task
   changed_when: "'status=changed' in task.stdout"
 
+
 # ------------------------------------------------------------------------------
 # Zsh
+
 
 - name: "zsh : Add init block to {{ zsh_zshrc_bottom_after_comp_init }}"
   ansible.builtin.blockinfile:
@@ -33,8 +35,10 @@
   when: task.changed
   ansible.builtin.command: zsh -c 'zcompile -R {{ zsh_zshrc_bottom_after_comp_init }}'
 
+
 # ------------------------------------------------------------------------------
 # Bash
+
 
 - name: "bash : Add init block to {{ bash_bashrc_middle }}"
   ansible.builtin.blockinfile:
